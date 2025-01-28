@@ -38,7 +38,7 @@ public class LinkedList {
 	 * @return the node at the given index
 	 */		
 	public Node getNode(int index) {
-		if (index < 0 || index > size) {
+		if (index < 0 || index >= size) {
 			throw new IllegalArgumentException(
 					"index must be between 0 and size");
 		}
@@ -155,7 +155,7 @@ public class LinkedList {
 	 *         if index is negative or greater than or equal to size
 	 */
 	public MemoryBlock getBlock(int index) {
-		if (index < 0 || index > size) {
+		if (index < 0 || index >= size) {
 			throw new IllegalArgumentException(
 					"index must be between 0 and size");
 		}		
@@ -240,16 +240,11 @@ public class LinkedList {
 	 */
 	public void remove(int index) {
 
-		if (index < 0) {
-			throw new IllegalArgumentException("Index cannot be negative: " + index);
+		if (index < 0 || index >= size) {
+			throw new IllegalArgumentException("index must be between 0 and size");
 		}
 
 		Node nodeToRemove = getNode(index);
-
-		if (nodeToRemove == null) {
-			throw new IllegalArgumentException("Index out of bounds: " + index);
-		}
-
 		remove(nodeToRemove);
 	}
 
