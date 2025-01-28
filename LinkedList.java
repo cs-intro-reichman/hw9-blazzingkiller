@@ -15,6 +15,18 @@ public class LinkedList {
 		last = first;
 		size = 0;
 	}
+
+	public Node getFirst() {
+		return first;
+	}
+	
+	public Node getLast() {
+		return last;
+	}
+	
+	public int getSize() {
+		return size;
+	}	
 	
 	/**
 	 * Gets the node located at the given index in this list. 
