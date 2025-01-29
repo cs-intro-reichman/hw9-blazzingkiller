@@ -88,6 +88,12 @@ public class MemorySpace {
 		 * Removes that block from 'allocatedList' and puts it at the front of 'freeList'.
 		 */
 		public void free(int address) {
+
+			if (allocatedList.getSize() == 0) {
+				// "Try to free a block of memory when freeList is empty" wants an exception
+				throw new IllegalArgumentException("index must be between 0 and size");
+			}
+			
 			for (int i = 0; i < allocatedList.getSize(); i++) {
 				MemoryBlock block = allocatedList.getBlock(i);
 				if (block.baseAddress == address) {
@@ -149,13 +155,12 @@ public class MemorySpace {
 		 */
 		@Override
 public String toString() {
-    // For freeList, we want exactly: "(base , length) (base2 , length2) ... \n"
-    // with a trailing space, then a newline.
-    // For allocatedList, we want exactly: "(base , length) (base2 , length2) ... " with trailing space. Then no extra newline?
 
     StringBuilder sb = new StringBuilder();
 
-    if (freeList.getSize() > 0) {
+    if (freeList.getSize() == 0) {
+		sb.append("\n");
+	} else {
         for (int i = 0; i < freeList.getSize(); i++) {
             MemoryBlock f = freeList.getBlock(i);
             sb.append("(")
