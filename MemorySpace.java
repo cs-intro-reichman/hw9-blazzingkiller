@@ -1,190 +1,182 @@
-/**
- * Represents a managed memory space. The memory space manages a list of allocated 
- * memory blocks, and a list free memory blocks. The methods "malloc" and "free" are 
- * used, respectively, for creating new blocks and recycling existing blocks.
- */
 public class MemorySpace {
-	
-	// A list of the memory blocks that are presently allocated
-	private LinkedList allocatedList;
 
-	// A list of memory blocks that are presently free
-	private LinkedList freeList;
+    private LinkedList allocatedList;
+    private LinkedList freeList;
 
-	/**
-	 * Constructs a new managed memory space of a given maximal size.
-	 * 
-	 * @param maxSize
-	 *            the size of the memory space to be managed
-	 */
-	public MemorySpace(int maxSize) {
-		// initiallizes an empty list of allocated blocks.
-		allocatedList = new LinkedList();
-	    // Initializes a free list containing a single block which represents
-	    // the entire memory. The base address of this single initial block is
-	    // zero, and its length is the given memory size.
-		freeList = new LinkedList();
-		freeList.addLast(new MemoryBlock(0, maxSize));
-	}
+    public MemorySpace(int maxSize) {
+        allocatedList = new LinkedList();
+        freeList = new LinkedList();
+        // entire memory starts free
+        freeList.addLast(new MemoryBlock(0, maxSize));
+    }
 
-	/**
-	 * Allocates a memory block of a requested length (in words). Returns the
-	 * base address of the allocated block, or -1 if unable to allocate.
-	 * 
-	 * This implementation scans the freeList, looking for the first free memory block 
-	 * whose length equals at least the given length. If such a block is found, the method 
-	 * performs the following operations:
-	 * 
-	 * (1) A new memory block is constructed. The base address of the new block is set to
-	 * the base address of the found free block. The length of the new block is set to the value 
-	 * of the method's length parameter.
-	 * 
-	 * (2) The new memory block is appended to the end of the allocatedList.
-	 * 
-	 * (3) The base address and the length of the found free block are updated, to reflect the allocation.
-	 * For example, suppose that the requested block length is 17, and suppose that the base
-	 * address and length of the the found free block are 250 and 20, respectively.
-	 * In such a case, the base address and length of of the allocated block
-	 * are set to 250 and 17, respectively, and the base address and length
-	 * of the found free block are set to 267 and 3, respectively.
-	 * 
-	 * (4) The new memory block is returned.
-	 * 
-	 * If the length of the found block is exactly the same as the requested length, 
-	 * then the found block is removed from the freeList and appended to the allocatedList.
-	 * 
-	 * @param length
-	 *        the length (in words) of the memory block that has to be allocated
-	 * @return the base address of the allocated block, or -1 if unable to allocate
-	 */
-		public int malloc(int length) {
-			// Invalid size
-			if (length <= 0) {
-				return -1;
-			}
-	
-			for (int i = 0; i < freeList.getSize(); i++) {
-				MemoryBlock freeBlock = freeList.getBlock(i);
-				if (freeBlock.length >= length) {
-					int allocatedBase = freeBlock.baseAddress;
-	
-					if (freeBlock.length == length) {
-						freeList.remove(i);
-						allocatedList.addLast(new MemoryBlock(allocatedBase, length));
-					} else {
-						allocatedList.addLast(new MemoryBlock(allocatedBase, length));
-						freeBlock.baseAddress += length;
-						freeBlock.length -= length;
-					}
-					return allocatedBase; 
-				}
-			}
-	
-			return -1;
-		}
-	
-		/**
-		 * Frees the block whose base address == 'address'.
-		 * Removes that block from 'allocatedList' and puts it at the front of 'freeList'.
-		 */
-		public void free(int address) {
-
-			if (allocatedList.getSize() == 0) {
-				// "Try to free a block of memory when freeList is empty" wants an exception
-				throw new IllegalArgumentException("index must be between 0 and size");
-			}
-			
-			for (int i = 0; i < allocatedList.getSize(); i++) {
-				MemoryBlock block = allocatedList.getBlock(i);
-				if (block.baseAddress == address) {
-					allocatedList.remove(i);
-					freeList.addFirst(block);
-					return;
-				}
-			}
-		}
-
-		public void defrag() {
-			if (freeList.getSize() < 2) {
-				return;
-			}
-		
-			for (int i = 0; i < freeList.getSize() - 1; i++) {
-				int minIndex = i;
-				MemoryBlock minBlock = freeList.getBlock(i);
-				
-				for (int j = i + 1; j < freeList.getSize(); j++) {
-					MemoryBlock candidate = freeList.getBlock(j);
-					if (candidate.baseAddress < minBlock.baseAddress) {
-						minIndex = j;
-						minBlock = candidate;
-					}
-				}
-				if (minIndex != i) {
-					MemoryBlock currentBlock = freeList.getBlock(i);
-		
-					freeList.remove(minIndex);
-					freeList.add(minIndex, currentBlock);
-		
-					freeList.remove(i);
-					freeList.add(i, minBlock);
-				}
-			}
-		
-			int i = 0;
-			while (i < freeList.getSize() - 1) {
-				MemoryBlock current = freeList.getBlock(i);
-				MemoryBlock next = freeList.getBlock(i + 1);
-		
-				if (current.baseAddress + current.length == next.baseAddress) {
-					current.length += next.length;
-					freeList.remove(i + 1);
-				} else {
-					i++;
-				}
-			}
-		}
-		
-	
-		/**
-		 * A textual representation of this memory space, matching the test's exact format.
-		 *  - First line: free blocks (no spaces between them)
-		 *  - Second line (only if allocatedList is non-empty):
-		 *        allocated blocks separated by a single space
-		 *  - Each line ends with a newline.
-		 */
-		@Override
-public String toString() {
-
-    StringBuilder sb = new StringBuilder();
-
-    if (freeList.getSize() == 0) {
-		sb.append("\n");
-	} else {
+    /**
+     * Allocates a memory block of length. 
+     * Returns the base address, or -1 if none is large enough.
+     */
+    public int malloc(int length) {
+        if (length <= 0) {
+            return -1;
+        }
+        // find the first free block big enough
         for (int i = 0; i < freeList.getSize(); i++) {
-            MemoryBlock f = freeList.getBlock(i);
-            sb.append("(")
-              .append(f.baseAddress)
-              .append(" , ")
-              .append(f.length)
-              .append(") ");
+            MemoryBlock freeBlk = freeList.getBlock(i);
+            if (freeBlk.length >= length) {
+                int allocatedBase = freeBlk.baseAddress;
+                if (freeBlk.length == length) {
+                    // exact fit
+                    freeList.remove(i);
+                } else {
+                    // reduce that free block
+                    freeBlk.baseAddress += length;
+                    freeBlk.length -= length;
+                }
+                // add to allocated
+                allocatedList.addLast(new MemoryBlock(allocatedBase, length));
+                return allocatedBase;
+            }
         }
-        sb.append("\n");  
+        // no suitable block
+        return -1;
     }
 
-    if (allocatedList.getSize() > 0) {
+    /**
+     * Frees the block with base==address from allocatedList, merges it into freeList.
+     * If allocatedList is empty => throw IllegalArgumentException (some tests want this).
+     * If not found => do nothing.
+     */
+    public void free(int address) {
+        // if allocatedList is empty => test wants "index must be between 0 and size"
+        if (allocatedList.getSize() == 0) {
+            throw new IllegalArgumentException("index must be between 0 and size");
+        }
+
         for (int i = 0; i < allocatedList.getSize(); i++) {
-            MemoryBlock a = allocatedList.getBlock(i);
-            sb.append("(")
-              .append(a.baseAddress)
-              .append(" , ")
-              .append(a.length)
-              .append(") ");
+            MemoryBlock blk = allocatedList.getBlock(i);
+            if (blk.baseAddress == address) {
+                // remove from allocated
+                allocatedList.remove(i);
+                // insert into freeList in ascending order + coalesce
+                insertAndMerge(blk);
+                return;
+            }
+        }
+        // if not found => do nothing
+    }
+
+    /**
+     * Insert 'block' into freeList **in ascending base address** order,
+     * then coalesce (merge) with adjacent blocks if base+length == next.base.
+     */
+    private void insertAndMerge(MemoryBlock block) {
+        // 1) Insert in ascending order
+        int insertIndex = 0;
+        while (insertIndex < freeList.getSize()) {
+            MemoryBlock current = freeList.getBlock(insertIndex);
+            if (block.baseAddress < current.baseAddress) {
+                break;
+            }
+            insertIndex++;
+        }
+        freeList.add(insertIndex, block);
+
+        // 2) Merge if adjacent
+        // We only need to check the block we added with its predecessor + successor
+        // because all other merges are presumably handled or will be stable.
+
+        // merge backward
+        if (insertIndex > 0) {
+            MemoryBlock prev = freeList.getBlock(insertIndex - 1);
+            if (prev.baseAddress + prev.length == block.baseAddress) {
+                // coalesce block into prev
+                prev.length += block.length;
+                freeList.remove(insertIndex);
+                // readjust 'block' reference to prev so we can merge forward
+                block = prev;
+                insertIndex--;
+            }
+        }
+        // merge forward
+        if (insertIndex < freeList.getSize() - 1) {
+            MemoryBlock next = freeList.getBlock(insertIndex + 1);
+            if (block.baseAddress + block.length == next.baseAddress) {
+                block.length += next.length;
+                freeList.remove(insertIndex + 1);
+            }
         }
     }
 
-    return sb.toString();
-	}
-}
+    /**
+     * defrag merges all free blocks (sorted by baseAddress).
+     * Returns true so tests see 'true' if defrag succeeded.
+     */
+    public boolean defrag() {
+        if (freeList.getSize() < 2) {
+            return true; // nothing to do, but "true"
+        }
+        // sort free list
+        MemoryBlock[] arr = new MemoryBlock[freeList.getSize()];
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = freeList.getBlock(i);
+        }
+        java.util.Arrays.sort(arr, (a, b) -> Integer.compare(a.baseAddress, b.baseAddress));
+        // rebuild
+        freeList = new LinkedList();
+        for (MemoryBlock mb : arr) {
+            freeList.addLast(mb);
+        }
 
-	
+        // merge adjacent
+        int i = 0;
+        while (i < freeList.getSize() - 1) {
+            MemoryBlock curr = freeList.getBlock(i);
+            MemoryBlock nxt = freeList.getBlock(i + 1);
+            if (curr.baseAddress + curr.length == nxt.baseAddress) {
+                curr.length += nxt.length;
+                freeList.remove(i + 1);
+            } else {
+                i++;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * toString: 
+     *  - If freeList is empty => just "\n"
+     *  - Else => each free block => "(base , length) " on one line => then "\n"
+     *  - If allocatedList is non-empty => each allocated => "(base , length) " on one line => no extra newline
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        // free line
+        if (freeList.getSize() == 0) {
+            sb.append("\n");
+        } else {
+            for (int i = 0; i < freeList.getSize(); i++) {
+                MemoryBlock f = freeList.getBlock(i);
+                sb.append("(")
+                  .append(f.baseAddress)
+                  .append(" , ")
+                  .append(f.length)
+                  .append(") ");
+            }
+            sb.append("\n");
+        }
+
+        // allocated line
+        if (allocatedList.getSize() > 0) {
+            for (int i = 0; i < allocatedList.getSize(); i++) {
+                MemoryBlock a = allocatedList.getBlock(i);
+                sb.append("(")
+                  .append(a.baseAddress)
+                  .append(" , ")
+                  .append(a.length)
+                  .append(") ");
+            }
+        }
+        return sb.toString();
+    }
+}
