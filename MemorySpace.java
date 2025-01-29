@@ -99,46 +99,46 @@ public class MemorySpace {
 		}
 
 		public void defrag() {
-			// 1. Sort by base address
-			sortFreeListByBase();
-	
-			// 2. Merge adjacent
+			if (freeList.getSize() < 2) {
+				return;
+			}
+		
+			for (int i = 0; i < freeList.getSize() - 1; i++) {
+				int minIndex = i;
+				MemoryBlock minBlock = freeList.getBlock(i);
+				
+				for (int j = i + 1; j < freeList.getSize(); j++) {
+					MemoryBlock candidate = freeList.getBlock(j);
+					if (candidate.baseAddress < minBlock.baseAddress) {
+						minIndex = j;
+						minBlock = candidate;
+					}
+				}
+				if (minIndex != i) {
+					MemoryBlock currentBlock = freeList.getBlock(i);
+		
+					freeList.remove(minIndex);
+					freeList.add(minIndex, currentBlock);
+		
+					freeList.remove(i);
+					freeList.add(i, minBlock);
+				}
+			}
+		
 			int i = 0;
 			while (i < freeList.getSize() - 1) {
 				MemoryBlock current = freeList.getBlock(i);
 				MemoryBlock next = freeList.getBlock(i + 1);
-	
+		
 				if (current.baseAddress + current.length == next.baseAddress) {
-					// Merge
 					current.length += next.length;
-					// Remove next
 					freeList.remove(i + 1);
-					// Don't increment i, re-check if further merges are possible
 				} else {
 					i++;
 				}
 			}
 		}
-
-		/** Helper to sort freeList by ascending base address. */
-		private void sortFreeListByBase() {
-			if (freeList.getSize() < 2) {
-				return;
-			}
-	
-			MemoryBlock[] blocks = new MemoryBlock[freeList.getSize()];
-			for (int i = 0; i < freeList.getSize(); i++) {
-				blocks[i] = freeList.getBlock(i);
-			}
-	
-			java.util.Arrays.sort(blocks, (a, b) -> Integer.compare(a.baseAddress, b.baseAddress));
-	
-			// Rebuild freeList in sorted order
-			freeList = new LinkedList();
-			for (MemoryBlock mb : blocks) {
-				freeList.addLast(mb);
-			}
-		}
+		
 	
 		/**
 		 * A textual representation of this memory space, matching the test's exact format.
@@ -148,45 +148,38 @@ public class MemorySpace {
 		 *  - Each line ends with a newline.
 		 */
 		@Override
-		public String toString() {
-			StringBuilder sb = new StringBuilder();
-	
-			// 1) Free list line (if not empty)
-			if (freeList.getSize() > 0) {
-				for (int i = 0; i < freeList.getSize(); i++) {
-					MemoryBlock f = freeList.getBlock(i);
-					sb.append("(")
-					  .append(f.baseAddress)
-					  .append(" , ")
-					  .append(f.length)
-					  .append(")");
-				}
-				sb.append("\n"); // line break
-			}
-	
-			// 2) Allocated list line (if not empty)
-			if (allocatedList.getSize() > 0) {
-				for (int i = 0; i < allocatedList.getSize(); i++) {
-					MemoryBlock a = allocatedList.getBlock(i);
-					if (i > 0) {
-						sb.append(" "); // single space between allocated blocks
-					}
-					sb.append("(")
-					  .append(a.baseAddress)
-					  .append(" , ")
-					  .append(a.length)
-					  .append(")");
-				}
-				sb.append("\n"); // line break
-			}
-	
-			return sb.toString();
-		}
-	
-		/**
-		 * Performs defrag. (Your tests don't seem to require it, 
-		 * but here’s a basic stub if you add it later.)
-		 */
-		
+public String toString() {
+    // For freeList, we want exactly: "(base , length) (base2 , length2) ... \n"
+    // with a trailing space, then a newline.
+    // For allocatedList, we want exactly: "(base , length) (base2 , length2) ... " with trailing space. Then no extra newline?
+
+    StringBuilder sb = new StringBuilder();
+
+    if (freeList.getSize() > 0) {
+        for (int i = 0; i < freeList.getSize(); i++) {
+            MemoryBlock f = freeList.getBlock(i);
+            sb.append("(")
+              .append(f.baseAddress)
+              .append(" , ")
+              .append(f.length)
+              .append(") ");
+        }
+        sb.append("\n");  
+    }
+
+    if (allocatedList.getSize() > 0) {
+        for (int i = 0; i < allocatedList.getSize(); i++) {
+            MemoryBlock a = allocatedList.getBlock(i);
+            sb.append("(")
+              .append(a.baseAddress)
+              .append(" , ")
+              .append(a.length)
+              .append(") ");
+        }
+    }
+
+    return sb.toString();
 	}
+}
+
 	
