@@ -42,9 +42,9 @@ public class LinkedList {
 			throw new IllegalArgumentException(
 					"index must be between 0 and size");
 		}
-		Node current = first; // Start at the first node
+		Node current = first; 
     for (int i = 0; i < index; i++) {
-        current = current.next; // Move to the next node
+        current = current.next; 
     }
     
     return current; 
@@ -77,21 +77,17 @@ public class LinkedList {
 		}
 		Node newNode = new Node(block);
 
-        // Case 1: Insert at head (index == 0)
         if (index == 0) {
             newNode.next = first;
             first = newNode;
-            // If the list was empty, 'first' and 'last' should be the same
             if (size == 0) {
                 last = newNode;
             }
         }
-        // Case 2: Insert at the end (index == size)
         else if (index == size) {
             last.next = newNode;
             last = newNode;
         }
-        // Case 3: Insert in the middle
         else {
             Node prev = getNode(index - 1);
             newNode.next = prev.next;
@@ -110,13 +106,10 @@ public class LinkedList {
 	 */
 	public void addLast(MemoryBlock block) {
 		Node newNode = new Node(block);
-
-        // If the list is empty, just set first/last to this new node
         if (size == 0) {
             first = newNode;
             last = newNode;
         } else {
-            // Link after the current 'last'
             last.next = newNode;
             last = newNode;
         }
@@ -163,7 +156,6 @@ public class LinkedList {
 		for (int i = 0; i < index; i++) {
     		current = current.next;
 			}
-			// Now current points to the node at the specified index
 		return current.block;
 	}
 
@@ -286,9 +278,7 @@ public void remove(MemoryBlock block) {
 		
 		Node current = first;
 		while (current != null) {
-			sb.append(current.block);  // or current.block.toString()
-			
-			// If there's another node ahead, add a comma separator
+			sb.append(current.block);  
 			if (current.next != null) {
 				sb.append(", ");
 			}
